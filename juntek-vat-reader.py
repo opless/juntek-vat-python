@@ -4,13 +4,42 @@ import datetime
 import serial
 from enum import Enum
 from bitstring import ConstBitStream
+import paho.mqtt.client as mqtt
+
 
 HDRA = b'\xAA'
 HDRB = b'\x1C'
 
 # You will need to change this to /dev/ACM... or /dev/tty... on linux/mac etc.
 PORT = "COM12"
+#Optional mqtt setup
 
+# Def for mqqt connection
+def on_connect(client, userdata, flags, rc):
+	print("Connected to MQTT server with result code :"+str(rc))
+
+#Mqtt details 
+#Username for mqtt
+user = ""
+#Password for mqtt
+password = ""
+#Unique mqtt client name
+client = mqtt.Client("")
+client.username_pw_set(user, password)    #set username and password
+client.on_connect = on_connect
+#Provide IP Address for you mqtt server and port
+client.connect("ip_address", 1883, 60) # use your MQTT server name
+client.loop_start()
+
+#Mqtt topic to publish the data to below is an example
+
+topic_volts="topic/volts"
+topic_amps="topic/amps"
+topic_watts="topic/watts"
+topic_amp_hour="topic/amp_hour"
+topic_watt_hour="topic/watt_hour"
+topic_uptime="topic/uptime"
+topic_temperature="topic/temperature"
 
 class State(Enum):
     START = 0
@@ -61,6 +90,15 @@ class Packet:
               'Temperature:', self.temperature,
               'W:', self.unknown_w, 'X:', self.unknown_x,
               'Y:', self.unknown_y, 'Z:', self.unknown_z)
+        print("Sending MQTT message...")
+	client.publish(topic_volts,self.volts,0,False)
+	client.publish(topic_amps,self.amps,0,False)
+	client.publish(topic_watts,self.watts,0,False)
+	client.publish(topic_amp_hour,self.amp_hour,0,False)
+	client.publish(topic_watt_hour,self.watt_hour,0,False)
+	client.publish(topic_uptime,self.uptime,0,False)
+	client.publish(topic_status,self.status,0,False)
+	client.publish(topic_temperature,self.temperature,0,False)
 
 
 with serial.Serial(PORT,
